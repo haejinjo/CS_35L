@@ -1,0 +1,157 @@
+1) The man option -k searches for a keyword in the short manual page 
+   descriptions and displays any matches. I ended up having to use the option 
+-e 
+   along with it (i.e. the combo, -ke) because otherwise it seemed to interpret 
+   something weirdly with regular expressions (which we haven't learned about) 
+   when searching. 
+   An example usage would be:
+			man -ke ls warning
+    which would search manpage for ls for the keyword "warning". 
+
+
+2) We can use whereis <command> to find the location of cp and wc programs in 
+   the filesystem.
+	Both seem to be located in /usr/bin such that:
+
+	/usr/bin/wc and /usr/bin/cp
+
+
+3) To find all executables (files) with one character names, I looked into the 
+   same /usr/bin branch because the answer to #2 seems to imply that this 
+particular branch 
+   holds most if not all executables.
+	Thought if nothing else it was a good place to start looking. 
+
+	The 'f' stands for file and the ? is a wildcard meaning any one single 
+	character. 
+
+	find /usr/bin -executable -type f -name ?
+
+	This returned to me the executables w and [. 
+
+	'w' shows who is logged on and what they are doing. Stalker-ish. 
+
+	'[' (and the likewise builtin shell command, 'test') evaluates 
+conditional 
+	expressions using a set of rules based on the number of arguments. 
+	(e.g. 0 args => expression is false, 1 	arg => expression is true if 
+and only if arg is not null, etc.)
+
+4) Out of desparation and vague intuition, I went to /usr/bin and ran this 
+   command:
+	ls -l emacs
+
+	What it showed me was that emacs is a symbolic link pointing to 
+	(denoted by an arrow '->') this file:
+	/etc/alternatives/emacs
+	Which I assume is the actual file that gets executed when we run the 
+	emacs link command. 
+
+5) We know that the format of a symbolic mode changed by chmod is 
+   [ugoa...][[+-=][perms...]...], where perms is either zero 	or more letters 
+   from the set 'rwxXst', or a single letter from the set 'ugo'.  The comma can 
+be 
+   used to separate		    multiple symbolic 	modes. So, in terms of 
+   permissions, the symbolic mode 'g+s, o-x' means to control file access so 	
+   that only other users in the file's group can access, and set group ID 
+   on execution. It removes execution permissions for any user who is 
+   "other" aka not the user or group members. 
+
+6) In order to search for files that have been modified in the last three 
+   weeks, we can use the option:
+	find -mtime n 
+	(n being a variable multiplied by 24 hrs to tailor how many days old of 
+	an object we are searching for with the find command)
+
+7) Using the previous answer, I search for directories that have been modified 
+   in the last three weeks by entering:
+	find -type d -mtime 21 	//Since d = directory and 3 weeks = 21 
+days/24hr periods
+
+
+8) To find all the files in the same directory as find (the directory being 
+/usr/bin, I checked) that are symbolic links
+	I input this command while in the bin directory:
+
+	 ls -l | grep --count lrw
+
+	 Because I knew any symbolic link file would begin with the letter 'l' 
+for link. And using grep's count option,
+	 I was able to get a simple output of the number of times this combo of 
+letters occured in the detailed list of files:
+
+	 271 symbolic links total.
+
+9) I pipe the commands:
+	
+	ls -c | find -type f | tail
+	c means sort by ctime, newest first
+ 	f means output only regular files from the list
+ 	tail used because I'm only interested in the last entry/entries of the 
+list because those will be
+ 	the oldest regular files, the very last being the oldEST: 
+
+ 	./audit/sotruss-lib.so
+
+ 10) Looking at the man page for locale, we can see that the data it uses is 
+determined by the settings of the environmental 	 variables defined in 
+locale(7). 
+
+ 11) Based on the given Emacs cheatsheet linked to us in the slides, I found 
+that the keystrokes C-h a will allow me to s
+	 search the list of Emacs commands  matching a string. This gives me 
+the list: 
+	 Buffer-menu-sort
+	 sort-columns
+	 sort-fields
+	 sort-lines
+	 sort-numeric-fields
+	 sort-pages
+	 sort-paragraphs
+	 sort-regexp-fields
+	 tabluated-list-col-sort
+	 tabulated-list-sort
+
+ 12) While in emacs, I can type C-h k, at which point I am prompted to 
+"Describe key (or click or menu item):" in the 			minibuffer. I 
+type in C-M-a and find out that it moves backward to the beginning of a defined 
+function in Lisp. I then 		type in C-M-h and find out it puts a 
+mark at the end of this defined function and points at the beginning.
+
+
+ 13) C-g is the quit command; it cancels commands before they have finished and 
+deactiavtes marks.  Quitting with 'C-g' is 		the way to get rid of a 
+partially typed command, or a numeric argument that you don't want.  
+Furthermore, if you are in 	the middle of a command that is running, 'C-g' 
+stops the command in a relatively safe way.  For example, if you quit 		
+out of a kill command that is taking a long time, either your text will all 
+still be in the buffer, or it will all be 		in the kill ring, or 
+maybe both. It does special things during searches; just, depending on the 
+status of the search.  		If the search has found what you specified and 
+is waiting for input, 'C-g' cancels the entire search, moving the cursor 	
+back to where you started the search. Else if 'C-g' is typed when there are 
+characters in the search string that have 		not been found--because 
+Emacs is still searching for them, or because it has failed to find them--then 
+the search 			string characters which have not been found are 
+discarded from the search string.  With them gone, the search is now 		
+successful and waiting for more input, so a second 'C-g' will cancel the entire 
+search.
+
+
+ 14) It pastes whatever you have stored from cutting or copying a section 
+previously (the most recently killed text).
+ 	Brings text from the kill-ring back into the buffer.
+
+ 15) I've looked at this thoroughly and can't figure out if I'm missing 
+something huge. The only real small noticeable 			difference I 
+see purely in the output between the two is that the dired in emacs has these 
+first three lines while the 		ls -l output does not:
+
+ 	  	total used in directory 323800 available 13093164
+  	 	dr-xr-xr-x.   2 root root       73728 Jan  6 11:30 .
+ 		 drwxr-xr-x.  15 root root        4096 Nov 18 14:34 ..
+
+
+
+
+
