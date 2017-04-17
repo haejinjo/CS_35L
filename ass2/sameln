@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#read in current directory as argument of script
+dir = $1

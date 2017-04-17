@@ -127,8 +127,8 @@ first English word:
 
 sed '1~2d' | 
 
-After which, I use sed again to substitute all angle-bracketed things with 
-nothing, effectively deleting them:
+After which, I use sed again to effectively remove all angle-bracket pairs that
+contain any number/type of characters other than a right angle bracket: 
 
 sed 's/<[^>]*>//g' | 
 
@@ -136,17 +136,21 @@ Then I treat upper as lower case letters:
 
 tr '[:upper:]' '[:lower:]' |
 
-To account for alternate translations I replace all commas followed by spaces 
-with single newlines:
-
-sed 's/, /\n/g' |
-
 Then, I remove all leading spaces in the list:
 
 sed 's/    //g' |
 
-And I treat the ` (ASCII grave accent) as if it were a ' (ASCII apostrophe) 
-with this command, (which took a few tries to execute only to find I need to 
+To account for entries w/ alternate translations I replace all commas with 
+single newlines:
+
+sed 's/,/\n/g' |
+
+And all spaces with newlines as well:
+
+sed 's/\s/\n/g' | 
+
+I then treat the ` (ASCII grave accent) as if it were a ' (ASCII apostrophe) 
+with this command, (which took a few tries to execute because I needed to 
 use double quotes instead of single, presumably because the char i'm trying to 
 replace is a single quote and it could get confused):
 
@@ -161,49 +165,45 @@ I sort the remaining list of words, removing any duplicates:
 
 sort -u 
 
-This finally allows me to execute a shell script that systematically applies
-all the rules necessary for a Hawaiian mini-dictionary, given by this command: 
+This finally allows me to execute a shell script: 
 
-cat hwnwdseng.htm | ./buildwords.sh > hwords
+$ chmod +x buildwords
+
+that systematically applies all the rules necessary for a Hawaiian 
+mini-dictionary, given by this command: 
+
+$ cat hwnwdseng.htm | ./buildwords > hwords
 
 To apply the Hawaiian (rather than English) spell checker, I run the following 
 shell command, noting that because I made the Hawaiian "dictionary" all lower 
 case as per the specifications, I should also make the list of assignment page 
 words lowercase when comparing: 
 
-cat assign2.html | tr '[:upper:]' '[:lower:] | tr -cs 'A-Za-z' '[\n*]' | sort 
--u | comm -23 - hwords | wc -l 
+$ cat assign2.html | tr '[:upper:]' '[:lower:]' | tr -cs 'A-Za-z' '[\n*]' | 
+sort -u | comm -23 - hwords | wc -l 
 
 The "wc -l" instruciton is added on in order to output the number of lines that 
 differ between hwords and assign2.html (aka the spelling mistakes), and 
-according to said output there are 409 Hawaiian spelling mistakes in the 
-assignment webpage. (There were 81 English spelling mistakes when compared to 
-the original words file). 
-
+according to said output there are 405 Hawaiian spelling mistakes in the 
+assignment webpage. 
 To test for bugs, I run the spellchecker against the hwords dictionary itself:
 
-cat hwords | tr '[:upper:]' '[:lower:]' | sort -u | comm -23 - hwords | wc -l
+$ cat hwords | tr '[:upper:]' '[:lower:]' | sort -u | comm -23 - hwords | wc -l
 
 and naturally get 0 spelling mistakes. 
 
-
 Interestingly some words are "misspelled" in English but not when checked with 
 Hawaiian, and vice versa. To see which ones were which, I stored the respective 
-mistakes into englishmistakes.txt and hawaiianmistakes.txt. I ran the following 
-shell commands on these files:
+mistakes into englishmistakes.txt and hawaiianmistakes.txt by replacing the pipe
+into wc -l with a redirection into textfiles. I ran the following shell 
+commands 
+on these files:
 
-cat englishmistakes.txt | sort -u | comm -23 - hawaiianmistakes.txt (to get the 
-uniquely English errors)
-cat englishmistakes.txt | sort -u | comm -13 - hawaiianmistakes.txt (to get the 
-uniquely Hawaiian errors)
+$ cat englishmistakes.txt | comm -23 - hawaiianmistakes.txt 
+(to get the 3 English-but-not-Hawaiian errors: halau, lau, wiki)
 
-It makes sense that there were 381 purely Hawaiian errors and only 53 english 
-ones. After all, the website is in the English language. Most of the English 
-errors were due to the presence of any capital letters in the words. In 
-particular, it saw the Hawaiian words "halau" and "wiki" as spelling errors. 
-
-Some examples of Hawaiian spell-checked words that were not considered errors 
-in English are "shell" and "vandebogart". 
+$ cat englishmistakes.txt | comm -13 - hawaiianmistakes.txt 
+(to get the MANY only-for-Hawaiian errors: abovementioned, system, checkers)
 
 
 
