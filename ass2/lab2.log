@@ -1,0 +1,207 @@
+First, to chheck that I am in standard C or POSIX locale, I use the command:
+
+$ locale
+
+I get this output:
+
+LANG=en_US.UTF-8
+LC_CTYPE="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_COLLATE="en_US.UTF-8"
+LC_MONETARY="en_US.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_PAPER="en_US.UTF-8"
+LC_NAME="en_US.UTF-8"
+LC_ADDRESS="en_US.UTF-8"
+LC_TELEPHONE="en_US.UTF-8"
+LC_MEASUREMENT="en_US.UTF-8"
+LC_IDENTIFICATION="en_US.UTF-8"
+LC_ALL=
+
+Which confirms that I have yet to switch to C locale, like so:
+
+$ export LC_ALL='C'
+
+Make sure there are no spaces surrounding the equal sign, of it won't do the 
+job. I double checked this by calling the locale command and reviewing the 
+output once more: 
+
+LANG=en_US.UTF-8
+LC_CTYPE="C"
+LC_NUMERIC="C"
+LC_TIME="C"
+LC_COLLATE="C"
+LC_MONETARY="C"
+LC_MESSAGES="C"
+LC_PAPER="C"
+LC_NAME="C"
+LC_ADDRESS="C"
+LC_TELEPHONE="C"
+LC_MEASUREMENT="C"
+LC_IDENTIFICATION="C"
+LC_ALL=C
+
+Next, to create a sorted list of English words, I sort the file stored on the 
+Linux servers and redirect the file into my own words.txt in my current 
+directory like so:
+
+$ sort /usr/share/dict/words > words.txt
+
+Then I create a text file, assign2.html, containing the HTML of the assignment 
+spec's webpage:
+
+wget http://web.cs.ucla.edu/classes/spring17/cs35L/assign/assign2.html
+
+and I run the following commands with assign2.html as standard input. 
+
+1) tr -c 'A-Za-z' '[\n*]' < assign2.html
+Anything that is not an alphabet letter (also known as the complement of 
+'A-za-z'), including spaces and numbers and symbols, is replaced with a 
+newline. 
+
+2) tr -cs 'A-Za-z' '[\n*]' < assign2.html 
+This command does the same thing as the previous except that it takes any of 
+the non-alphabet repeated characters and squeezes them into one instance of 
+that character. This way, any duplicate/excess spaces or newlines or even 
+symbols (which we can more or less assume won't be appear multiple times in our 
+english words, if at all), they won't disrupt the consistent, pretty list we 
+have going on. 
+
+3) cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort
+This command has the exact same line contents/configuration of the previous, 
+except now each of the lines are sorted in lexicographical order. 
+
+4)  cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u
+This outputs the same list of words except it suppresses all but one of each 
+instance of a word, cutting down and making the list much more efficient to 
+read. 
+
+5) cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+This splits the words up into 3 columns, where the left most is words unique to 
+assign2.html, the middle contains words unique to words.txt, and the rightmost 
+contains word entries that appear in both. 
+
+6) cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+This command suppresses the second and third columns of the regular comm 
+output, thereby showing JUST the first column (aka the unique-to-assign2.html 
+column) in sorted unique order. 
+
+We can use line #6 as a crude implementation of an English spell checker. 
+
+Now, how do we create a Hawaiian spell checker? (after all, we are C-SHELL 
+scripting hehe)
+
+Note: Hawaiian's traditional orthography has only the following letters (or 
+their capitalized equivalents), assuming ASCII '''(which has no capitalized 
+equivalent) in place of its okina symbol: 
+p k ' m n w l h a e i o u 
+P K   M N W L H A E I O U 
+
+First, I retrieve a given Hawaiian/English word list site using wget command, 
+which automatically saves it into the file, hwnwdseng.htm in my current 
+assignment directory: 
+
+$ wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+In order to extract just the Hawaiian words from the HTML, I needed to develop 
+a good understanding of regex as well as the commands: grep (search for and 
+select), sed (search and modify patterns), and tr (one-and-done modify). 
+I used these concepts to write a script, buildwords.sh, that applies an 
+automated, systematic set of rules that read the HTML from standard input and 
+write a sorted list of unique words to standard output. 
+
+First to isolate the chunk of the document that actually contains the Hawaiian 
+words, I check which lines the word entries begin and end, using them in a sed 
+instruction: 
+
+sed -n '30, 984p' |
+
+Then I search and select just the lines that contain both English and Hawaiian 
+vocabulary:
+
+grep "<\(td\)>.\+</td>" |
+
+Once I have all the words isolated, I delete every other line starting from the 
+first English word:
+
+sed '1~2d' | 
+
+After which, I use sed again to substitute all angle-bracketed things with 
+nothing, effectively deleting them:
+
+sed 's/<[^>]*>//g' | 
+
+Then I treat upper as lower case letters:
+
+tr '[:upper:]' '[:lower:]' |
+
+To account for alternate translations I replace all commas followed by spaces 
+with single newlines:
+
+sed 's/, /\n/g' |
+
+Then, I remove all leading spaces in the list:
+
+sed 's/    //g' |
+
+And I treat the ` (ASCII grave accent) as if it were a ' (ASCII apostrophe) 
+with this command, (which took a few tries to execute only to find I need to 
+use double quotes instead of single, presumably because the char i'm trying to 
+replace is a single quote and it could get confused):
+
+sed "s/\`/\'/g" | 
+
+And finally I delete any lines containing 1 or more non-Hawaiian letters to 
+account for entries that are improperly formatted and might contain English:
+
+sed "/[^pk'mnwlhaeiou]/d" |
+
+I sort the remaining list of words, removing any duplicates: 
+
+sort -u 
+
+
+To apply the Hawaiian (rather than English) spell checker, I run the following 
+shell command, noting that because I made the Hawaiian "dictionary" all lower 
+case as per the specifications, I should also make the list of assignment page 
+words lowercase:
+
+cat assign2.html | tr '[:upper:]' '[:lower:] | tr -cs 'A-Za-z' '[\n*]' | sort 
+-u | comm -23 - hwords | wc -l 
+
+The "wc -l" instruciton is added on in order to output the number of lines that 
+differ between hwords and assign2.html (aka the spelling mistakes), and 
+according to said output there are 409 Hawaiian spelling mistakes in the 
+assignment webpage. (There were 81 English spelling mistakes when compared to 
+the original words file). 
+
+To test for bugs, I run the spellchecker against the hwords dictionary itself:
+
+cat hwords | tr '[:upper:]' '[:lower:]' | sort -u | comm -23 - hwords | wc -l
+
+and naturally get 0 spelling mistakes. 
+
+
+Interestingly some words are "misspelled" in English but not when checked with 
+Hawaiian, and vice versa. To see which ones were which, I stored the respective 
+mistakes into englishmistakes.txt and hawaiianmistakes.txt. I ran the following 
+shell commands on these files:
+
+cat englishmistakes.txt | sort -u | comm -23 - hawaiianmistakes.txt (to get the 
+uniquely English errors)
+cat englishmistakes.txt | sort -u | comm -13 - hawaiianmistakes.txt (to get the 
+uniquely Hawaiian errors)
+
+It makes sense that there were 381 purely Hawaiian errors and only 53 english 
+ones. After all, the website is in the English language. Most of the English 
+errors were due to the presence of any capital letters in the words. In 
+particular, it saw the Hawaiian words "halau" and "wiki" as spelling errors. 
+
+Some examples of Hawaiian spell-checked words that were not considered errors 
+in English are "shell" and "vandebogart". 
+
+
+
+
+
