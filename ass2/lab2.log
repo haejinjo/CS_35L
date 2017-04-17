@@ -161,11 +161,15 @@ I sort the remaining list of words, removing any duplicates:
 
 sort -u 
 
+This finally allows me to execute a shell script that systematically applies
+all the rules necessary for a Hawaiian mini-dictionary, given by this command: 
+
+cat hwnwdseng.htm | ./buildwords.sh > hwords
 
 To apply the Hawaiian (rather than English) spell checker, I run the following 
 shell command, noting that because I made the Hawaiian "dictionary" all lower 
 case as per the specifications, I should also make the list of assignment page 
-words lowercase:
+words lowercase when comparing: 
 
 cat assign2.html | tr '[:upper:]' '[:lower:] | tr -cs 'A-Za-z' '[\n*]' | sort 
 -u | comm -23 - hwords | wc -l 
