@@ -1,4 +1,123 @@
 #!/bin/bash
 
-#read in current directory as argument of script
-dir = $1
+#read in single supplied argument, a directory 
+dir=$1
+IFS=$'\n' #delimiter should be explicitly set to newline according 
+			#to output of "ls testDir | od -c"
+          #otherwise a filename like "fact1  .c" will not work
+
+#declarations
+declare -a fileList
+
+#index to store items into fileList
+i=0 
+
+#for some reason, dots aren't being sorted before all others so have to 
+#grep them out separately
+#this will store just the filenames starting with dots, in sorted order
+startWithDots=`ls -a $dir | grep '^\.\+[^\.]' | sort`
+
+#store string containing the ls output of the given directory
+#a option prevents ignoring files starting with '.'
+otherFiles=`ls $dir| sort`
+
+
+#there are only 2 files starting with dots (assign and fact duplicates) 
+for file in $startWithDots
+do
+	#if current file is regular
+	if [ -f "$dir/$file" ]
+		then
+		#populates array with reg files starting with dots
+		fileList[$i]="$dir/$file"
+		let i=i+1 #i++ 
+	fi
+done
+
+IFS=$'\n' 
+
+#Populate an array fileList with all of dir's files
+#First, declare variable, file, to iterate through the literal string 
+#of directory's elements
+for file in $otherFiles 
+do
+	# if current file is regular
+    if [ -f "$dir/$file" ]  #altern. syntax for "test -f file" command
+    then
+    	#now we can populate with the non-dot-initial reg files
+        fileList[$i]="$dir/$file" #still on iter left off on .file pop
+		let i=i+1 #i++ 
+    fi
+done
+
+let regFileCount=i
+let i=0 #reinitialize for next looping fiasco
+
+#loop through sorted, dots-first fileList 
+#comparing each file for a subsequent duplicate 
+#to replace dups with hardlinks
+
+
+while [ $i -lt $regFileCount ] #while (i < regFileCount)
+do
+
+	
+	if ! [ -r "${fileList[$i]}" ]
+		then
+			echo "Outer loop: ${fileList[$i]}"
+			echo "Denied file persmissions!!!"
+			let i=i+1
+			continue
+			
+	fi 
+
+	let next=i+1 #initialize a subsequent value 2 be evaluated
+	while [ $next -lt $regFileCount ] # while (next < regFileCount)
+	do
+
+
+		if ! [ -r "${fileList[$next]}" ]
+		then
+			echo "${fileList[$i]}"
+			echo "${fileList[$next]}"
+			echo "Denied file persmissions!!!"
+			let next=next+1
+			continue
+		fi
+
+
+		#return 0 if files are exact same contents
+		cmp -s "${fileList[$i]}" "${fileList[$next]}"
+	
+#if i'th and next files are duplicates (return val of prev command == 0)
+		if [ $? -eq 0 ]
+		    then
+	     #replace next file (lexicographically after) with hardlink named
+     	    #same as a pre-existing filename to update the 
+	    #original to link to i'th file
+
+		    
+
+		    	ln -f "${fileList[$i]}" "${fileList[$next]}"
+		fi
+
+		#else, silently ignore 
+	let next=next+1
+	
+
+	done
+
+	let i=i+1
+
+
+done
+
+
+
+
+#for i in "${arrayName[@]}" is how you iterate through array
+# for file in "${fileList[@]}"
+# do
+#    echo "$file"
+# done
+
