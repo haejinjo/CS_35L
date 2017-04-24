@@ -48,6 +48,6 @@ OUTPUTS:
                       ^
 SyntaxError: invalid syntax
 
-This is likely because the syntax for handling except blocks changed in the 
-updated 
-version of Python. 
+This is likely because the protocol for handling tuple unpacking (aka the
+translation of parameters separated by commas in a funciton) with except blocks 
+changed in the updated version of Python.
