@@ -521,8 +521,11 @@ drwxr-xr-x  2 classhjo class   16384 Apr 23 16:21 man
 drwxr-xr-x  5 classhjo class    4096 Sep 10  2009 old
 -rw-r--r--  1 classhjo class    1819 Apr 21 01:10 patch_file
 
-To further test the fix, I create a directory, test_files in my assignment 
-directory (such that test_files is a sister to coreutils-7.6 and 
+I want to further test the fix, making sure that I did not overwrite the old ls 
+program by accidentally reinstalling rather than simply rebuilding. 
+
+To do this, I create a directory, test_files in my assignment 
+directory, ass3 (such that test_files is a sister to coreutils-7.6 and 
 coreutilsInstall): 
 $ mkdir test_files
 
@@ -530,11 +533,11 @@ In test_files, I generate two files with different modification dates (one more
 recent and one at least a year old):
 
 $ touch recent_mod					
-$ touch –t 201601210959.30 old_mod   // Here I aritifically mark a file as 
+$ touch -t  201601210959.30 old_mod   // Here I aritifically mark a file as 
 being modified last year 
 
-and run both modified and unmodified versions of the ls program on these files 
-(the .. directory refers to ass3): 
+I run both modified and unmodified versions of the ls program on these files 
+(the .. directory refers to my ass3 directory): 
 
 $ ./../coreutils-7.6/src/ls -l
 OUTPUT:
@@ -549,7 +552,8 @@ total 0
 -rw-r--r-- 1 classhjo class 0 2017-04-23 18:20 recent_mod
 
 The modified version has been altered to display the Unix date formatting while 
-the unmodified versino still has the format YYYY-MM-DD. 
+the unmodified version still has the format YYYY-MM-DD. 
+This shows I have retained both working and non-working versions of ls. 
 
 
 
