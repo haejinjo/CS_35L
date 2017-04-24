@@ -21,4 +21,33 @@ default one, it might introduce new problems with the application for users in
 non-English speaking countries where they might not understand the English 
 words and/or the ordering of the month/day/year itself. 
 
-3) When the randline.py script is invoked on an empty file like /dev/null, 
+3) When the randline.py script is invoked on an empty file like /dev/null, it
+issues an error. Since it is trying to index the contents of the file, if 
+the file is empty, it will try to access data out of range. Output below:
+Traceback (most recent call last):
+  File "./randline.py", line 70, in <module>
+    main()
+  File "./randline.py", line 64, in main
+    sys.stdout.write(generator.chooseline())
+  File "./randline.py", line 34, in chooseline
+    return random.choice(self.lines)
+  File "/usr/lib64/python2.7/random.py", line 274, in choice
+    return seq[int(self.random() * len(seq))]  # raises IndexError if seq is 
+empty
+IndexError: list index out of range
+
+
+4) When the randline script is invoked with python 2, it behaves according to 
+expectations. However, when done with python 3, it registers an error like so:
+
+$ python3 ./randline -n 3 filename
+
+OUTPUTS: 
+  File "./randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
+This is likely because the syntax for handling except blocks changed in the 
+updated 
+version of Python. 
