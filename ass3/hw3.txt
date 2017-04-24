@@ -50,4 +50,7 @@ SyntaxError: invalid syntax
 
 This is likely because the protocol for handling tuple unpacking (aka the
 translation of parameters separated by commas in a funciton) with except blocks 
-changed in the updated version of Python.
+changed in the updated version of Python. The reason this probably passed
+is because there's no real loss of abilities without the automated tuple
+unpacking feature, because one could just use a single parameter that maps
+to multiple, like a struct for example. 
