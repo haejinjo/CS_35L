@@ -1,0 +1,24 @@
+
+1) Below is the chunk of Brady's patch file relevant to the question:
+
+@@ -2014,7 +2014,6 @@ decode_switches (int argc, char **argv)
+             break;
+
+           case long_iso_time_style:
+-          case_long_iso_time_style:
+             long_time_format[0] = long_time_format[1] = "%Y-%m-%d %H:%M";
+             break;
+
+I believe Brady's patch removed the line "case_long_iso_time_style:" because it 
+was repeated twice. However, because it was part of a switch statement, it 
+would have had the same effect without being removed, because it would have 
+simply fallen through to the second one. It's nicer this way, though, because 
+who wants unnecessary liens of code. 
+
+
+2) If my company were to adopt this patched version of Coreutils instead of the 
+default one, it might introduce new problems with the application for users in 
+non-English speaking countries where they might not understand the English 
+words and/or the ordering of the month/day/year itself. 
+
+3) When the randline.py script is invoked on an empty file like /dev/null, 

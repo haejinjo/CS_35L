@@ -1,0 +1,48 @@
+     |    5 +++++
+ src/ls.c |   10 ++--------
+ 2 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index 1571c9c..0380975 100644
+--- a/NEWS
++++ b/NEWS
+@@ -32,6 +32,11 @@ GNU coreutils NEWS                                    -*- outline -*-
+   last component (possibly via a dangling symlink) can be created,
+   since mkdir will succeed in that case.
+ 
++  ls -l now uses the traditional three field time style rather than
++  the two field numeric ISO style, in locales where a specific style
++  has not been specified. This currently affects all English language
++  locales for example. [old behavior was introduced in coreutils-6.0]
++
+ ** Improvements
+ 
+   rm: rewrite to use gnulib's fts
+diff --git a/src/ls.c b/src/ls.c
+index 1bb6873..4531b94 100644
+--- a/src/ls.c
++++ b/src/ls.c
+@@ -2014,7 +2014,6 @@ decode_switches (int argc, char **argv)
+             break;
+ 
+           case long_iso_time_style:
+-          case_long_iso_time_style:
+             long_time_format[0] = long_time_format[1] = "%Y-%m-%d %H:%M";
+             break;
+ 
+@@ -2030,13 +2029,8 @@ decode_switches (int argc, char **argv)
+                    formats.  If not, fall back on long-iso format.  */
+                 int i;
+                 for (i = 0; i < 2; i++)
+-                  {
+-                    char const *locale_format =
+-                      dcgettext (NULL, long_time_format[i], LC_TIME);
+-                    if (locale_format == long_time_format[i])
+-                      goto case_long_iso_time_style;
+-                    long_time_format[i] = locale_format;
+-                  }
++                  long_time_format[i] =
++                    dcgettext (NULL, long_time_format[i], LC_TIME);
+               }
+           }
+       /* Note we leave %5b etc. alone so user widths/flags are honored.  */
