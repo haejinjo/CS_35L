@@ -113,6 +113,8 @@ def main():
 	# 	smaller_file = f2
 
 	bigger_file = []
+	file_sizes_same = False
+	num_lines = 0
 
 	if len(f1) < len(f2):
 		f1_smaller = True
@@ -122,53 +124,166 @@ def main():
 		f1_bigger = True
 		bigger_file = f1
 		smaller_file = f2
+	else:
+		file_sizes_same = True
+		num_lines = len(f1)
 
 	output=""
 
+
 	# NO -u OPTION REQUESTED, just -1 -2 and/or -3
-	if not options.input_unsorted: 
+	if not options.input_unsorted:
 
-	#loop through f2 list, checking against every element in f1 list 
-	# (inner/outer loops arbitrary since I'll check for leftovers later if files are different sizes)
-		for i in range(len(f2)):
-			for j in range(len(f1)):
+	# 	if file_sizes_same:
+	# 		for i in range(num_lines):
+	# 			print i
+	# 			for j in range(num_lines):
 
-				# TAKE CARE OF -1 
-				if f2[i] > f1[j]: 		# if f1 line ASCII-precedes f2 line,  store in col1
-					if not suppress_1: 
-						output += f1[j] # column 1 data is leftmost when it is expressed 
+	# 				# TAKE CARE OF -1 
+	# 				if f2[i] > f1[j]: 		# if f1 line ASCII-precedes f2 line,  store in col1
+	# 					if not suppress_1: 
+	# 						output += f1[j] # column 1 data is leftmost when it is expressed 
+	# 					j=j+1
 
-				#TAKE CARE OF -2 
-				elif f2[i] < f1[j]: 		# else if f2's line precedes f1's line in ASCII, store in col2
-					if not suppress_2:
-						if suppress_1:		 # option -1 implies...
-							output += f2[i]  # column 2 data will be situated leftmost
+	# 				#TAKE CARE OF -2 
+	# 				elif f2[i] < f1[j]: 		# else if f2's line precedes f1's line in ASCII, store in col2
+	# 					if not suppress_2:
+	# 						if suppress_1:		 # option -1 implies...
+	# 							output += f2[i]  # column 2 data will be situated leftmost
 
-						else: 				# option -2 implies...
-							output += '\t'+f2[i] # column 2 is one tab to the right 
+	# 						else: 				# option -2 implies...
+	# 							print "print " + f2[i] +" to col2 b/c its < than f1[" + str(j) + "]"
+	# 							output += '\t'+f2[i] # column 2 is one tab to the right 
+	# 					i=i+1
 
-	
-				# TAKE CARE OF -3
-				else: #all remaining cases: if the compared lines in f1 and f2 are exact same
-					if not suppress_shared:
 
-						if (suppress_1 and suppress_2): #option -12
-							output += f1[j] #col3 becomes leftmost
+		
+	# 				# TAKE CARE OF -3
+	# 				else: #all remaining cases: if the compared lines in f1 and f2 are exact same
+	# 					if not suppress_shared:
 
-						elif suppress_1 or suppress_2: #option -1 or -2
-							output += '\t'+f1[j] #col3 becomes one tab to the right 
+	# 						if (suppress_1 and suppress_2): #option -12
+	# 							output += f1[j] #col3 becomes leftmost
 
-						else:  #no options 
-							output += '\t\t'+f1[j] #col3 is in its usual place
-							i=i+1
+	# 						elif suppress_1 or suppress_2: #option -1 or -2
+	# 							output += '\t'+f1[j] #col3 becomes one tab to the right 
 
-				#if unlucky and we're iterating through the smaller list with the bigger one,
-				# exit nested loop once inner loop through smaller list is about to finish
-				if f1_smaller and j == (len(f1)-1):
-					break
-			else:
-				continue #executed if inner loop ended normally without a break
-			break # executed if 'continue' was skipped
+	# 						# else:  #no options 
+	# 						# 	print "this is" + f1[j] +"and"+ f2[i]
+	# 							output += '\t\t'+f1[j] #col3 is in its usual place
+	# 					i=i+1
+	# 					j=j+1
+							
+	 
+	# #loop through f2 list, checking against every element in f1 list 
+	# # (inner/outer loops arbitrary since I'll check for leftovers later if files are different sizes)
+	# 	else:
+	# 		for i in range(len(f2)):
+	# 			for j in range(len(f1)):
+
+	# 				# TAKE CARE OF -1 
+	# 				if f2[i] > f1[j]: 		# if f1 line ASCII-precedes f2 line,  store in col1
+	# 					if not suppress_1: 
+	# 						output += f1[j] # column 1 data is leftmost when it is expressed 
+	# 					j=j+1
+	# 				#TAKE CARE OF -2 
+	# 				elif f2[i] < f1[j]: 		# else if f2's line precedes f1's line in ASCII, store in col2
+	# 					if not suppress_2:
+	# 						if suppress_1:		 # option -1 implies...
+	# 							output += f2[i]  # column 2 data will be situated leftmost
+
+	# 						else: 				# option -2 implies...
+	# 							output += '\t'+f2[i] # column 2 is one tab to the right 
+	# 					i=i+1
+		
+	# 				# TAKE CARE OF -3
+	# 				else: #all remaining cases: if the compared lines in f1 and f2 are exact same
+	# 					if not suppress_shared:
+
+	# 						if (suppress_1 and suppress_2): #option -12
+	# 							output += f1[j] #col3 becomes leftmost
+
+	# 						elif suppress_1 or suppress_2: #option -1 or -2
+	# 							output += '\t'+f1[j] #col3 becomes one tab to the right 
+
+	# 						else:  #no options 
+	# 							output += '\t\t'+f1[j] #col3 is in its usual place
+	# 							i=i+1
+	# 					i=i+1
+	# 					j=j+1
+	# 				#if unlucky and we're iterating through the smaller list with the bigger one,
+	# 				# exit nested loop once inner loop through smaller list is about to finish
+	# 				if f1_smaller and j == (len(f1)-1):
+	# 					break
+	# 			else:
+	# 				continue #executed if inner loop ended normally without a break
+	# 			break # executed if 'continue' was skipped
+
+
+
+
+	# 	# print the leftovers in the larger file's list in its respective column 
+	# 	if f1_bigger and (j < len(f1)) and (not suppress_2): 
+	# 		remaining_f1 = f1[j:]
+
+	# 		for k in range(len(remaining_f1)):
+	# 			output += remaining_f1[k]
+
+	# 	elif f1_smaller and (i < len(f2)) and (not suppress_2): 
+	# 		remaining_f2 = f2[i:]
+
+	# 		for m in range(len(remaining_f2)):
+	# 			output += '\t' + remaining_f2[m]
+
+
+	# # -u OPTION REQUESTED, pepper urself for unsorted input
+	# #else: 
+
+		
+	# print output
+
+		i=0
+		j=0
+
+		while i < len(f2) and j < len(f1):
+			#print "i: " + str(i) + " j: " + str(j) + "\n"
+
+			# TAKE CARE OF -1 
+			if f2[i] > f1[j]: 		# if f1 line ASCII-precedes f2 line,  store in col1
+				if not suppress_1: 
+					output += f1[j] # column 1 data is leftmost when it is expressed 
+				j=j+1
+
+			#TAKE CARE OF -2 
+			elif f2[i] < f1[j]: 		# else if f2's line precedes f1's line in ASCII, store in col2
+				if not suppress_2 and suppress_1:  # option -1 implies...
+					output += f2[i]  # column 2 data will be situated leftmost
+
+				else: 				# option -2 implies...
+					output += '\t'+f2[i] # column 2 is one tab to the right 
+				i=i+1
+		
+			# TAKE CARE OF -3
+			else: #all remaining cases: if the compared lines in f1 and f2 are exact same
+				if not suppress_shared:
+
+					if (suppress_1 and suppress_2): #option -12
+						output += f1[j] #col3 becomes leftmost
+
+					elif suppress_1 or suppress_2: #option -1 or -2
+						output += '\t'+f1[j] #col3 becomes one tab to the right 
+
+					else:  #no options 
+						output += '\t\t'+f1[j] #col3 is in its usual place
+				i=i+1
+				j=j+1
+					#if unlucky and we're iterating through the smaller list with the bigger one,
+					# exit nested loop once inner loop through smaller list is about to finish
+				# 	if f1_smaller and j == (len(f1)-1):
+				# 		break
+				# else:
+				# 	continue #executed if inner loop ended normally without a break
+				# break # executed if 'continue' was skipped
 
 
 
@@ -188,12 +303,196 @@ def main():
 
 
 	# -u OPTION REQUESTED, pepper urself for unsorted input
-	#else: 
+	else: 
+		
+		# Create list for storing col3 values to compare
+		column3 = []
+
+		# i = 0
+		# j = 0
+		# while i < len(f1) and j < len(f2):
+		# 	if f1[i] == f2[j]:
+		# 		output += '\t\t'+ f1[i]
+		# 		column3.append(f1[i])
+		# 		i=i+1
+		# 		j=j+1
+
+
+		# 	else: #if unique to file 1, 
+		# 		output += f1[i]
+		# 		i = i + 1 # compare with next f1 line 
+		
+
+
+		next = False
+		next_i = 0
+		next_j = 0
+		#populate array of COL3 lines 
+		for i in range(len(f1)):
+			for j in range(len(f2)):
+				if next:
+					j = next_j
+				next = False
+				if f1[i] == f2[j]:
+					column3.append(f1[i])
+					next = True
+					next_j = j+1
+
+
+		#output file 1 stuff (unique lines in col1, shared w/ file2 in col3)
+		i = 0
+		j = 0
+		while i < len(f1) and j < len(column3):
+
+			# if MISMATCH... 
+			if f1[i] != column3[j]:
+				# but we're not done iterating through col3
+				if j < len(column3)-1:
+					j = j+1
+					continue
+
+				else: # and we've checked it against all the col3 lines
+					if i != len(f1):
+						output += f1[i]
+					i = i+1
+
+
+			# if MATCH, keep it in col3 output
+			else:
+				output += '\t\t' + f1[i]
+				i = i+1
+
+			
+
+			#If we've reached last line in file1
+			if i == len(f1)-1:
+				j =0 
+
+			# Reiterate through col3 list of lines
+			if j == len(column3) -1:
+				j = 0
+		
+		i = 0
+		j = 0
+
+		# output leftover file2 stuff in col2 
+		while i < len(f2) and j < len(column3):
+			# if MISMATCH... 
+			if f2[i] != column3[j]:
+				# but we're not done iterating through col3
+				if j < len(column3)-1:
+					j = j+1
+					
+
+				else: # and we've checked it against all the col3 lines
+					if i != len(f2):
+						output += '\t' + f2[i]
+					i = i+1
+			else:
+				i = i+1
+				print "got here"
+
+####### ####### ####### THIS IS ATTEMP 2####### ####### ####### ####### 
+		# next = False
+		# next_i = 0
+		# next_j = 0
+
+
+
+		# #populate array of COL3 lines 
+		# for i in range(len(f1)):
+		# 	for j in range(len(f2)):
+		# 		if next:
+		# 			j = next_j
+		# 		next = False
+		# 		if f1[i] == f2[j]:
+		# 			column3.append(f1[i])
+		# 			next = True
+		# 			next_j = j+1
+				
+
+		# next = False
+		# next_i = 0
+		# next_j = 0
+		# # for i in range(len(column3)):
+		# # 	print column3[i]
+
+		# # Loop through file 1
+		# for i in range(len(f1)):
+		# 	if next:
+		# 		i = next_i
+		# 	next = False
+
+		# 	#Loop through files existing in file 1 AND file 2
+		# 	for j in range(len(column3)):
+		# 		if next:
+		# 			j = next_j
+		# 		next = False
+
+		# 		if f1[i] != column3[j]:
+		# 			output += f1[i]
+		# 			next = True
+		# 			next_i = i+1
+		# 			i = i+1
+
+		# 		else:
+		# 			output += '\t\t' + f1[i]
+		# 			next = True
+		# 			next_j = j+1
+		# 			j = j+1
+
+		# for i in range(len(f2)):
+		# 	for j in range(len(column3)):
+		# 		if f2[i] != column3[j]:
+		# 			output += '\t' + f2[i]
+
+
+####### ####### ####### #######  ATTEMPT 1 ####### ####### ####### ####### ####### 
+		# for i in range(len(f1)):
+		# 	if next:
+		# 		i = next_i
+		# 		print i
+				
+		# 	next = False
+
+		# 	for j in range(len(f2)):
+		# 		if next:
+		# 			continue
+		# 			next = False
+
+		# 		print "iter j: " + str(j)
+
+		# 		# If both are same
+		# 		if f1[i] == f2[j]:
+
+		# 			output += '\t\t' + f1[i]
+		# 			column3.append(f1[i])
+					
+		# 			# If not at end, move onto next file1 line
+		# 			if i != len(f1)-1:
+		# 				next_i=i+1
+		# 				next = True
+
+		# 		# If we've found a unique-to-file1 line, output leftmost
+		# 		else:
+		# 			output += f1[i]
+
+		# 			if i != len(f1)-1:
+		# 				next_i = i+1
+		# 				next = True
+				
+
+
+		# for i in range (len(f2)):
+		# 	for j in range(len(column3)): 
+		# 		if f2[i] != column3[j]:
+		# 			output += '\t' + f2[i] # put in col2
+
+		# for i in range(len(unique_to_f1)):
+		# 	print unique_to_f1[i]
 
 		
 	print output
-
-	
 
 
 
