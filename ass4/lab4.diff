@@ -1,0 +1,26 @@
+2017-04-30  Haejin Jo  <classhjo@lnxsrv06.seas.ucla.edu>
+
+        * fixed_timespec.h (t): Changed	int to signed long long	int in timespec_cmp function to	prevent	integer	overflow.
+
+
+--- coreutils-with-bug/lib/timespec.h	2005-09-21 23:05:39.000000000 -0700
++++ ./fixed_timespec.h	2017-04-30 11:39:36.884714000 -0700
+@@ -40,12 +40,15 @@
+ };
+ # endif
+ 
+-/* Return negative, zero, positive if A < B, A == B, A > B, respectively.
+-   Assume the nanosecond components are in range, or close to it.  */
++/* Return negative, zero, positive number stored in diff 
++    if A < B, A == B, A > B, respectively. */
+ static inline int
+ timespec_cmp (struct timespec a, struct timespec b)
+ {
+-  int diff = a.tv_sec - b.tv_sec;
++  signed long long int big_enough_a = (signed long long int) a.tv_sec;
++  signed long long int big_enough_b = (signed long long int) b.tv_sec;
++  signed long long int diff = big_enough_a - big_enough_b;
++
+   return diff ? diff : a.tv_nsec - b.tv_nsec;
+ }
+ 

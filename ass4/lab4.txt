@@ -1,1 +1,268 @@
-hi
+LAB 4 REPORT
+C PROGRAMMING {and/but mostly} DEBUGGING 
+
+My assignment is to maintain an old stable version of coreutils, which has a bug in its implementation of the ls program. 
+I download the buggy version of coreutils package and untar it to look inside the coreutils-with-bug directory that appears in ass4. 
+
+$ wget http://web.cs.ucla.edu/classes/spring17/cs35L/assign/coreutils-with-bug.tar.gz
+$ tar -xvf coreutils-with-bug.tar.gz 
+
+I then build this old version of coreutils as-is by running configure and make in the coreutils-with-bug directory:
+$ ./configure
+$ make 
+
+It all goes smoothly until I make, where I get this error:
+
+In file included from utimecmp.c:41:0:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^
+In file included from utimecmp.h:25:0,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+            ^
+make[3]: *** [utimecmp.o] Error 1
+make[3]: Leaving directory `/w/home.18/class/classhjo/CS_35L/ass4/coreutils-with-bug/lib'
+make[2]: *** [all] Error 2
+make[2]: Leaving directory `/w/home.18/class/classhjo/CS_35L/ass4/coreutils-with-bug/lib'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/w/home.18/class/classhjo/CS_35L/ass4/coreutils-with-bug'
+make: *** [all] Error 2
+
+To fix this issue, I retrieve the renaming patch from the assignment page:
+$ wget http://web.cs.ucla.edu/classes/spring17/cs35L/assign/coreutils.diff
+
+And create a directory coreutils-fixed, which I will work on instead to preserve the original buggy version for testing later:
+$ mkdir coreutils-fixed
+$ cp -a coreutils-with-bug coreutils-fixed
+
+I apply the patch while inside coreutils-fixed and rebuild it to see what happens like so: 
+$ patch -p0 < coreutils.diff
+
+And I get the following output as a result: 
+patching file lib/utimens.c
+patching file lib/utimens.h
+patching file src/copy.c
+patching file src/tee.c
+patching file src/touch.c
+
+$ make 
+
+The patch appears to have fixed the errors that were happening with the bug in coreutils. 
+
+To set up a test environment, I create both a current file and an artificially-vintage file using the touch -d command inside a clean tmp directory.
+Then I pause all processes with sleep command to create another current file, now1 (sleep guarantees now1 to be newer than now). 
+
+$ tmp=$(mktemp -d)
+$ cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice
+$ touch now
+$ sleep 1
+$ touch now1
+
+After setting up this test environment, I ask for a list of the files in tmp in long format and sorted by modification time, newest first, setting the time zone to UTC. 
+
+$ ~/CS_35L/ass4/coreutils-with-bug/src/ls -lt wwi-armistics now now1
+
+And this is the result: 
+-rw-r--r-- 1 eggert csfac 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 eggert csfac 0 2017-01-25 00:11:55.528846902 +0000 now1
+-rw-r--r-- 1 eggert csfac 0 2017-01-25 00:11:54.524820127 +0000 now
+
+This is obviously odd output because the -t option should sort the list by modification time with the NEWEST being FIRST. A file created almost 100 years ago is not very new. (Wow it's almost been a 
+century since world war 1...)
+
+
+The bug is that ls command mishandles files whose time stamps are very far in the past. It seems to act as if they are in the future. 
+
+Our next step is to FIND THE BUG!! With the GNU Debugger. 
+While still in the tmp directory to work on the buggy version, we start gdb and check the list of functions for interesting places in the ls source code to put breakpoints, using the following 
+commands: 
+
+$ gdb ~/CS_35L/ass4/coreutils-with-bug/src/ls
+(gdb) info functions 
+
+And this is the output we get from info: 
+
+All defined functions:
+
+File ls.c:
+int main(int, char **);
+void usage(int);
+static size_t calculate_columns(_Bool);
+static void clear_files(void);
+static int compare_atime(V, V);
+static int compare_ctime(V, V);
+static int compare_extension(V, V);
+static int c
+static int compare_name(V, V);
+static int compare_size(V, V);
+static int compare_version(V, V);
+static int compstr_atime(V, V);
+static int compstr_ctime(V, V);
+static int compstr_extension(V, V);
+static int compstr_mtime(V, V);
+static int compstr_name(V, V);
+static int compstr_size(V, V);
+static _Bool dev_ino_compare(const void *, const void *);
+static void dev_ino_free(void *);
+static size_t dev_ino_hash(const void *, size_t);
+static void dired_dump_obstack(const char *, struct obstack *);
+static void extract_dirs_from_files(const char *, _Bool);
+static void file_failure(_Bool, const char *, const char *);
+static void format_user(uid_t, int);
+static void format_user_or_group(const char *, unsigned long, int);
+static int format_user_width(uid_t);
+static _Bool get_funky_string(char **, const char **, _Bool, size_t *);
+static uintmax_t gobble_file(const char *, enum filetype, _Bool, const char *);
+static void indent(size_t, size_t);
+static _Bool is_colored(enum indicator_no);
+static size_t length_of_file_name_and_frills(const struct fileinfo *);
+static void prep_non_filename_text(void);
+static void print_current_files(void);
+static void print_file_name_and_frills(const struct fileinfo *);
+static void print_long_format(const struct fileinfo *);
+static void print_name_with_quoting(const char *, mode_t, int, struct obstack *);
+static void print_type_indicator(mode_t);
+static void put_indicator(const struct bin_str *);
+static void queue_directory(const char *, const char *, _Bool);
+static size_t quote_name(FILE *, const char *, const struct quoting_options *, size_t *);
+static int rev_cmp_atime(V, V);
+static int rev_cmp_ctime(V, V);
+static int rev_cmp_extension(V, V);
+static int rev_cmp_mtime(V, V);
+static int rev_cmp_name(V, V);
+static int rev_cmp_size(V, V);
+static int rev_cmp_version(V, V);
+...
+
+Most of these function names seemed intuitively not related to the problem. For example, I knew we had no issues with column formatting or printing of the file list so I didn't consider putting 
+breakpoints at funcitons like format_user(uid_t, int) or compare_name(V,V). Anything related to "time" though, I was interested in.
+
+To clarify what was meant by mtime, atime, and ctime, I found online that mtime indicates the time the contents of a file have been changed...aka MODIFICATION TIME. This sounds right up our alley for 
+the bug, so I set a breakpoint at the function so aptly named:
+
+(gdb) b compare_mtime
+
+This outputs:
+Breakpoint 1 at 0x406483: compare_mtime. (2 locations)
+
+Interestingly, when I went to double check my breakpoints (because I accidentally set multiple at the same function), I got this output:
+
+(gdb) info b
+Num     Type           Disp Enb Address            What
+3       breakpoint     keep y   <MULTIPLE>         
+3.1                         y     0x0000000000406483 in rev_cmp_mtime at ../lib/timespec.h:48
+3.2                         y     0x00000000004064c0 in compare_mtime at ../lib/timespec.h:48
+
+This was sort of a relief because it meant that rev_cmp_mtime function is somehow tied back to compare_mtime, so my intution for choosing the latter from the list of functions as the breakpoint 
+location wasn't missing anything hugely important. I noticed this because in our trivial demo in class, the breakpoint didn't have any .1 or .2 versions of itself, just the one. 
+
+Next, I run the program with breakpoint at compare_mtime on: 
+(gdb) r -lt wwi-armistice now now1
+
+And after some fiddling around I tailor the display to show only cmp_mtime:
+(gdb) list 2877, 2888
+
+Which gives me this output:
+2877	cmp_mtime (struct fileinfo const *a, struct fileinfo const *b,
+2878		   int (*cmp) (char const *, char const *))
+2879	{
+2880	  int diff = timespec_cmp (get_stat_mtime (&b->stat),
+2881				   get_stat_mtime (&a->stat));
+2882	  return diff ? diff : cmp (a->name, b->name);
+2883	}
+2884	static int compare_mtime (V a, V b) { return cmp_mtime (a, b, xstrcoll); }
+2885	static int compstr_mtime (V a, V b) { return cmp_mtime (a, b, strcmp); }
+2886	static int rev_cmp_mtime (V a, V b) { return compare_mtime (b, a); }
+2887	static int rev_str_mtime (V a, V b) { return compstr_mtime (b, a); }
+2888
+
+Once here, I step into the function:
+(gdb) si
+
+And immediately get taken to a callee function, timespec_cmp, which I decide to check out:
+
+(gdb) list 42, 51
+42	
+43	/* Return negative, zero, positive if A < B, A == B, A > B, respectively.
+44	   Assume the nanosecond components are in range, or close to it.  */
+45	static inline int
+46	timespec_cmp (struct timespec a, struct timespec b)
+47	{
+48	  int diff = a.tv_sec - b.tv_sec;
+49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+50	}
+51
+
+Originally, the comment above it was not visible but I'm so glad I fiddled again and expanded the view to see it, because I was quite thrown off by what was happening here, but now I'm sure this is 
+the problem! The programmer wrote this "assuming" input would be in range, probably because they didn't think anybody would be listing Linux files written deep in the trenches of early 20th century 
+Europe. 
+
+This lends itself to integer overflow if the first argument, a, is very small and therefore wraps around when subtracted by a larger number. 
+
+Just to make sure of this I check the values that get stored in diff by stepping in and printing before and after the subtraction occurs:
+
+(gdb) p diff
+$7 = 1493574604
+(gdb) si
+0x00000000004064c7	49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+(gdb) p diff
+$8 = -1187566692
+
+Indeed it contains a big undefined negative number, which can't make sense. Time can't even BE negative!
+To fix this, we should change the data type used to store the time comparisons from int to signed long long int, which will account for potentially very large positive numbers. 
+
+My visual memory skills finally came in handy because I rememembered timespec.h file being shown in the lib directory when I stepped in to the function in gdb (see below)
+
+~*~*~*~*FLASHBACK FLASHBACK FLASHBACK FLASHBACK*~*~*~*~*~*
+(gdb) si
+timespec_cmp (b=..., a=...) at ../lib/timespec.h:49
+~*~*~*~*FLASHBACK FLASHBACK FLASHBACK FLASHBACK*~*~*~*~*~*
+
+So I went to retrieve the file, make a copy of my own, and fix it to compare with the old file:
+
+$ cd ~/CS_35L/ass4/coreutils-with-bug/lib
+$ cp timespec.h fixed_timespec.h
+$ mv fixed_timespec.h ~/CS_35L/ass4
+
+In my assignment folder, I alter the fixed version's timespec function manually. Then I create a new patch file containing my coreutils fixes using the buggy and fixed versions like so:
+
+diff -u coreutils-with-bug/lib/timespec.h ./fixed_timespec.h > lab4.diff
+
+Once I've done this, I go into the file to check if it worked:
+
+$ emacs lab4.diff
+
+And once I confirm all is good, I create a ChangeLog entry explaining my fix using C-x 4 a. I manually copy-paste this formatted entry inside the diff file, prepending it to the patch. 
+
+PATCH FILE COMPLETED!
+
+Next I reproduce the problem in the SEASNET Linux Server's home directory. 
+
+$ cd ~
+$ mkir lets_try_here
+$ cd lets_try_here
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice
+$ touch now
+$ sleep 1
+$ touch now1
+$ ls -lt
+
+And we get, to my surprise, a broken output like our original buggy version of coreutils did: 
+
+total 0
+-rw-r--r-- 1 classhjo class 0 Dec 17  2054 wwi-armistice
+-rw-r--r-- 1 classhjo class 0 Apr 30 11:53 now1
+-rw-r--r-- 1 classhjo class 0 Apr 30 11:53 now
+
+Disgraceful, SEASnet!
+
+
+
+
+
+
+
+

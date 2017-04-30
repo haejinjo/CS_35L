@@ -1,0 +1,4 @@
+2017-04-30  Haejin Jo  <classhjo@lnxsrv06.seas.ucla.edu>
+
+	* fixed_timespec.h (t): Changed int to signed long long int in timespec_cmp function to prevent integer overflow. 
+
