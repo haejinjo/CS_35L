@@ -21,11 +21,8 @@ int main (int argc, char** argv) {
  bool curr_char_printed = false;
   char curr_char; 
   char output_char;
-  //char output_string[]="";
   char* i; 
-  char* j; /* cstring iterator */
-  // int index = 0;   //cstring char index iterator  
-
+  char* j; 
 
 // TESTING HOW THE POINTERS TO CHARS ARE BEING INTERPRETED
 // FORGOT TO DEREFERENCE THE char* i POINTER WHEN COMPARING IT TO NULL BYTE => UNDEFINED OUTPUT
@@ -45,52 +42,39 @@ int main (int argc, char** argv) {
   //  printf("\n");
 
   //Loop through chars of file input getchar stores as many as possible in buffer 
-
   while((curr_char = getchar()) != EOF)
   {
-    //TO DO: FIGURE OUT WHY 2 NEWLINES AT THE END 
-    //printf("%c\n", curr_char);
-
-    //LOOP THRU ARG1 CHARS
-    //Note: should be ok since arguments are not gonna be super long 
-    //printf("input string char being examined: %c\n", curr_char);
-
-    //i = src; 
+    curr_char_printed = false; 
     j = dst;
-   // curr_char_printed = false; 
-
-    //printf("Printing src and dst\n %s\n",src);
-
 
     // CHECK INPUT CHAR AGAINST ARG CHAR(S)
    for (i = src; *i != '\0' ; i++)
     { 
-      //printf("src char is %c\n", *i);
-        // IF INPUT CHAR MATCHES ARG1 CHAR 
+        // if input char maps to a src char
         if(curr_char == *i)
         { 
-           // printf("curr char is equal to %c\n", *i);
-
-          //REASSIGN TO ARG2'S CHAR 
+          //output corresponding dst char  
            output_char = *j; 
            putchar(output_char); 
-           curr_char_printed = true; 
-           break; 
-          //printf("curr char is now %c\n", *j);
-           // OUTPUT WHATEVER GOT PLACED INTO CURR_CHAR 
-        
+           curr_char_printed = true; //set flag
+           break;  
         }
       
        j++; 
+
     } //END OF FOR LOOP
     
+    //USE FLAG TO PREVENT DOUBLE PRINTING
     if (!curr_char_printed)
     {
+      //output original input char
       putchar(curr_char);
     }
+    
+  } //END OF FILE INPUT CHARS LOOP 
 
-    curr_char_printed = false; 
-  }
+
+
 
   return 0;
-}
+} // END OF MAIN 
