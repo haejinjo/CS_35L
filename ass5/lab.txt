@@ -1,0 +1,7 @@
+System Call Programming and Debugging
+
+With the command:
+
+head --bytes=5000000 /dev/urandom > reallyBigFile.txt
+
+I create a test file with 5,000,000 bytes. 

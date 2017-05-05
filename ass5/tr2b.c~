@@ -1,0 +1,18 @@
+// BUFFERED I/O
+#include <stdio> // for getchar putchar
+//replace each char in first string with the corresponding 
+// char in secondn string 
+
+int main (int argc, char** argv) {
+  
+  // error check for number of arges != 2
+
+  //Note: argv[1] is first argument, skipping program name 
+  // Store the two mapping arguments
+  char* str1 = argv[1];
+  char* str2 = argv[2]; 
+
+  
+
+  return 0;
+}
